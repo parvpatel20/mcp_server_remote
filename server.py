@@ -11,6 +11,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastmcp import FastMCP
+from starlette.responses import JSONResponse
 
 from .rag import rag_agent
 
@@ -30,6 +31,12 @@ async def lifespan(server):
 
 # Initialize FastMCP with lifespan for eager resource loading
 mcp = FastMCP("Freshdesk Knowledge Base", lifespan=lifespan)
+
+
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(request):
+    del request
+    return JSONResponse({"status": "ok", "service": "freshdesk-mcp"})
 
 
 @mcp.tool()
@@ -127,4 +134,8 @@ async def ask_freshdesk_with_llm(question: str, session_id: str = "default_sessi
 
 
 if __name__ == "__main__":
-    mcp.run(show_banner=False)
+    mcp.run(transport="http", host="0.0.0.0", port=8000, show_banner=False)
+
+
+# ASGI app for serverless and production hosting (e.g., Vercel)
+app = mcp.http_app(path="/mcp", stateless_http=True)

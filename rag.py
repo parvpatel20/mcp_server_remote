@@ -8,11 +8,11 @@ import asyncio
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
-from ..llm_rerank import llm_rerank_candidates
+from .llm_rerank import llm_rerank_candidates
 from .embeddings import embedding_model
 from .pinecone_client import pinecone_client
+from .settings import settings
 from .utils import format_article_url
-from ...config import settings
 
 logger = logging.getLogger(__name__)
 

@@ -9,7 +9,7 @@ from typing import List, Dict, Any, Optional
 
 from pinecone import Pinecone, ServerlessSpec
 
-from ...config import settings
+from .settings import settings
 
 logger = logging.getLogger(__name__)
 
