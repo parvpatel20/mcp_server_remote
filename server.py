@@ -22,10 +22,17 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(server):
-    """Initialize all heavy resources once at server startup."""
-    logger.info("🚀 Freshdesk MCP Server starting — loading LangChain resources...")
-    await rag_agent.initialize()
-    logger.info("✅ LangChain RAG resources ready. Server is accepting tool calls.")
+    """
+    Keep HTTP startup light for serverless (e.g. Vercel).
+
+    Eager `rag_agent.initialize()` in lifespan often exceeds the platform cold-start
+    budget and surfaces as FUNCTION_INVOCATION_FAILED. RAG loads on first tool call
+    instead (see `RAGAgent.ensure_initialized`).
+    """
+    del server
+    logger.info(
+        "Freshdesk MCP HTTP app ready; RAG (embeddings + Pinecone) loads on first tool call."
+    )
     yield {}
 
 

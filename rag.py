@@ -34,6 +34,16 @@ class RAGAgent:
 
     def __init__(self):
         self.initialized = False
+        self._init_lock = asyncio.Lock()
+
+    async def ensure_initialized(self) -> None:
+        """Load embeddings and Pinecone once; safe under concurrent tool calls."""
+        if self.initialized:
+            return
+        async with self._init_lock:
+            if self.initialized:
+                return
+            await self.initialize()
 
     async def initialize(self) -> None:
         """Initialize heavy retrieval resources once at server startup."""
@@ -63,8 +73,7 @@ class RAGAgent:
         """
         del conversation_history
 
-        if not self.initialized:
-            raise RuntimeError("RAG agent not initialized. Ensure initialize() is called at server startup.")
+        await self.ensure_initialized()
 
         try:
             logger.debug(f"Generating embedding for question: {question}")
