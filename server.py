@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 from fastmcp import FastMCP
 from starlette.responses import JSONResponse
 
-from .rag import rag_agent
+from rag import rag_agent
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
