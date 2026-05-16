@@ -4,11 +4,10 @@ Freshdesk MCP Server.
 Exposes tools for querying Freshdesk Knowledge Base via RAG.
 Uses LangChain's built-in integrations for embeddings, vector store, and RAG chain.
 
-All heavy resources (embedding model + Pinecone client) are initialized
-at server startup via the lifespan hook — NOT on each tool call.
+Stateless HTTP mode is enabled for serverless deployment (Vercel).
+RAG resources load lazily on first tool call via `RAGAgent.ensure_initialized`.
 """
 import logging
-from contextlib import asynccontextmanager
 
 from fastmcp import FastMCP
 from starlette.responses import JSONResponse
@@ -20,24 +19,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-@asynccontextmanager
-async def lifespan(server):
-    """
-    Keep HTTP startup light for serverless (e.g. Vercel).
-
-    Eager `rag_agent.initialize()` in lifespan often exceeds the platform cold-start
-    budget and surfaces as FUNCTION_INVOCATION_FAILED. RAG loads on first tool call
-    instead (see `RAGAgent.ensure_initialized`).
-    """
-    del server
-    logger.info(
-        "Freshdesk MCP HTTP app ready; RAG (embeddings + Pinecone) loads on first tool call."
-    )
-    yield {}
-
-
-# Initialize FastMCP with lifespan for eager resource loading
-mcp = FastMCP("Freshdesk Knowledge Base", lifespan=lifespan)
+# Initialize FastMCP with stateless_http for serverless (Vercel) compatibility
+mcp = FastMCP("Freshdesk Knowledge Base", stateless_http=True)
 
 
 @mcp.custom_route("/health", methods=["GET"])
@@ -141,9 +124,8 @@ async def ask_freshdesk_with_llm(question: str, session_id: str = "default_sessi
 
 
 if __name__ == "__main__":
-    mcp.run(transport="http", host="0.0.0.0", port=8000, show_banner=False)
+    mcp.run(transport="streamable-http", host="0.0.0.0", port=8000)
 
 
 # ASGI app for serverless and production hosting (e.g., Vercel)
-# Change this in server.py (Line 148)
-app = mcp.http_app(path="/mcp", transport="sse")
+app = mcp.http_app(path="/mcp", transport="streamable-http")
