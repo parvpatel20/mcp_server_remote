@@ -19,8 +19,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# Initialize FastMCP with stateless_http for serverless (Vercel) compatibility
-mcp = FastMCP("Freshdesk Knowledge Base", stateless_http=True)
+# Initialize FastMCP server
+mcp = FastMCP("Freshdesk Knowledge Base")
 
 
 @mcp.custom_route("/health", methods=["GET"])
@@ -128,4 +128,5 @@ if __name__ == "__main__":
 
 
 # ASGI app for serverless and production hosting (e.g., Vercel)
-app = mcp.http_app(path="/mcp", transport="streamable-http")
+# stateless_http=True is required for serverless (no persistent sessions)
+app = mcp.http_app(path="/mcp", transport="streamable-http", stateless_http=True)
