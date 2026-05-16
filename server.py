@@ -10,6 +10,10 @@ RAG resources load lazily on first tool call via `RAGAgent.ensure_initialized`.
 import logging
 import os
 
+# Must be set before FastMCP initializes — disables server-side session tracking
+# which is incompatible with Vercel's stateless serverless functions.
+os.environ["FASTMCP_STATELESS_HTTP"] = "true"
+
 from fastmcp import FastMCP
 from starlette.responses import JSONResponse
 
@@ -125,9 +129,10 @@ async def ask_freshdesk_with_llm(question: str, session_id: str = "default_sessi
 
 
 if __name__ == "__main__":
-    mcp.run(transport="sse", host="0.0.0.0", port=8000)
+    mcp.run(transport="streamable-http", host="0.0.0.0", port=8000)
 
 
-# ASGI app for Vercel — SSE transport so Antigravity/Claude Desktop can connect.
-# SSE uses GET /sse (event stream) + POST /messages (send messages).
-app = mcp.http_app(path="/", transport="sse")
+# ASGI app for Vercel — streamable-http in stateless mode.
+# Each POST to /mcp is fully self-contained (no persistent sessions).
+# This is the only transport compatible with Vercel's serverless architecture.
+app = mcp.http_app(path="/mcp", transport="streamable-http", stateless_http=True)
