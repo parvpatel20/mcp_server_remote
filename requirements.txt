@@ -2,3 +2,4 @@ fastmcp>=3.2.4
 pinecone>=5.0.0
 langchain-huggingface>=0.1.0
 langchain-text-splitters>=0.2.0
+numpy
