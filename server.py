@@ -8,6 +8,11 @@ Stateless HTTP mode is enabled for serverless deployment (Vercel).
 RAG resources load lazily on first tool call via `RAGAgent.ensure_initialized`.
 """
 import logging
+import os
+
+# Force stateless mode for serverless environments (Vercel).
+# FastMCP checks this env var to disable session tracking.
+os.environ.setdefault("FASTMCP_STATELESS_HTTP", "true")
 
 from fastmcp import FastMCP
 from starlette.responses import JSONResponse
