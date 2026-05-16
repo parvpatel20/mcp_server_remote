@@ -145,4 +145,5 @@ if __name__ == "__main__":
 
 
 # ASGI app for serverless and production hosting (e.g., Vercel)
-app = mcp.http_app(path="/mcp", stateless_http=True)
+# Change this in server.py (Line 148)
+app = mcp.http_app(path="/mcp", transport="sse")
